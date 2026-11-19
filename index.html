@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Fire ID Ban Checker</title>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body {
+            background: #0b0f19;
+            color: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px;
+        }
+        .container {
+            background: #131b2e;
+            border: 1px solid #1e293b;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 430px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+            text-align: center;
+        }
+        .badge-top {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        h1 { margin: 0 0 8px; font-size: 1.55rem; color: #ffffff; }
+        p.subtitle { margin: 0 0 20px; color: #94a3b8; font-size: 0.92rem; }
+        input[type="text"] {
+            width: 100%;
+            padding: 13px 15px;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            background: #0b0f19;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            margin-bottom: 14px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        input[type="text"]:focus { border-color: #f59e0b; }
+        button {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.92; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 12px;
+            display: none;
+            text-align: center;
+        }
+        .result-safe {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid #10b981;
+            color: #34d399;
+        }
+        .result-banned {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid #ef4444;
+            color: #f87171;
+        }
+        .result-error {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid #f59e0b;
+            color: #fbbf24;
+        }
+        .result-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 4px; }
+        .result-msg { font-size: 0.92rem; opacity: 0.95; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="badge-top">FREE FIRE TOOL</span>
+        <h1>FF Ban Status Checker</h1>
+        <p class="subtitle">আপনার Free Fire UID দিয়ে আইডি ব্যান আছে কিনা চেক করুন</p>
+
+        <form id="banForm">
+            <input type="text" id="uidInput" inputmode="numeric" pattern="[0-9]+" placeholder="Enter Player UID (e.g. 123456789)" required>
+            <button type="submit" id="submitBtn">Check Status</button>
+        </form>
+
+        <div id="resultBox" class="result-box">
+            <div id="resultTitle" class="result-title"></div>
+            <div id="resultMsg" class="result-msg"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('banForm');
+        const uidInput = document.getElementById('uidInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultBox = document.getElementById('resultBox');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultMsg = document.getElementById('resultMsg');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const uid = uidInput.value.trim();
+            if (!uid) return;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Checking...';
+            resultBox.style.display = 'none';
+
+            try {
+                const res = await fetch(`/api/check.php?uid=${encodeURIComponent(uid)}`);
+                const data = await res.json();
+
+                resultBox.className = 'result-box';
+                resultBox.style.display = 'block';
+
+                if (data.status === 'not_banned') {
+                    resultBox.classList.add('result-safe');
+                    resultTitle.textContent = '✅ Account Safe (Not Banned)';
+                    resultMsg.textContent = `${data.message} (UID: ${uid})`;
+                } else if (data.status === 'banned') {
+                    resultBox.classList.add('result-banned');
+                    resultTitle.textContent = '🚫 Account Banned';
+                    resultMsg.textContent = `${data.message} (UID: ${uid})`;
+                } else {
+                    resultBox.classList.add('result-error');
+                    resultTitle.textContent = '⚠️ Error';
+                    resultMsg.textContent = data.error || 'Could not check this UID.';
+                }
+            } catch (err) {
+                resultBox.className = 'result-box result-error';
+                resultBox.style.display = 'block';
+                resultTitle.textContent = '⚠️ Network Error';
+                resultMsg.textContent = 'সার্ভারের সাথে সংযোগ করা যাচ্ছে না। আবার চেষ্টা করুন।';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Check Status';
+            }
+        });
+    </script>
+</body>
+</html>
